@@ -9,6 +9,7 @@
             display: block;
             margin: 0 auto;
             position: relative;
+            touch-action: none; /* Prevent default touch behavior */
         }
     </style>
 </head>
@@ -234,6 +235,7 @@
         score = 0;
     }
 
+    // Keyboard controls
     document.addEventListener('keydown', (e) => {
         if (e.key === 'ArrowRight') {
             player.dx = player.speed;
@@ -251,6 +253,23 @@
         if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
             player.dx = 0;
         }
+    });
+
+    // Touch controls for mobile
+    canvas.addEventListener('touchstart', (e) => {
+        const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
+        const middle = canvas.width / 2;
+        
+        if (touchX < middle) {
+            player.dx = -player.speed; // Move left
+        } else {
+            player.dx = player.speed; // Move right
+        }
+    });
+
+    canvas.addEventListener('touchend', () => {
+        player.dx = 0; // Stop moving when touch ends
+        createBullet(); // Fire a bullet on touch end
     });
 
     setInterval(createEnemy, 1000);
