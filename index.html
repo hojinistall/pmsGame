@@ -13,45 +13,40 @@
     </style>
 </head>
 <body>
-<canvas id="gameCanvas" width="600" height="400"></canvas>
+<canvas id="gameCanvas"></canvas>
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-
-    // Load player image
     const playerImg = new Image();
     playerImg.src = 'player.png'; // Player 이미지 파일 경로
 
-    const player = {
-        x: canvas.width / 2 - 15,
-        y: canvas.height - 60,
+    let player = {
         width: 30,
         height: 60,
         speed: 5,
         dx: 0,
         img: playerImg,
-        weaponType: 'normal' // 기본 무기 형태
+        weaponType: 'normal',
+        x: canvas.width / 2 - 15,
+        y: canvas.height - 60,
     };
 
     const bullets = [];
     const enemies = [];
-    let score = 0; // Score 초기값
-    let isGameOver = false; // 게임 오버 상태
-    const explosions = []; // 폭발 효과 관리 배열
-    const explosionDuration = 1000; // 폭발 효과 시간 (ms)
+    let score = 0;
+    let isGameOver = false;
+    const explosions = [];
+    const explosionDuration = 1000;
 
-    // Load enemy images
     const enemyImages = [
-        'enemy1.png', // Image 1
-        'enemy2.png', // Image 2
-        'enemy3.png'  // Image 3
+        'enemy1.png',
+        'enemy2.png',
+        'enemy3.png'
     ];
 
-    // Load explosion image
     const explosionImg = new Image();
-    explosionImg.src = 'explosion.png'; // 폭발 이미지 경로
+    explosionImg.src = 'explosion.png';
 
-    // Weapon option coordinates
     const weaponOptions = [
         { type: 'normal', label: 'Normal' },
         { type: 'laser', label: 'Laser' },
@@ -60,14 +55,20 @@
 
     let currentWeaponIndex = 0;
 
-    function changeWeapon() {
-        currentWeaponIndex = (currentWeaponIndex + 1) % weaponOptions.length;
-        player.weaponType = weaponOptions[currentWeaponIndex].type;
+    function resizeCanvas() {
+        canvas.width = window.innerWidth - 20;
+        canvas.height = window.innerHeight - 20;
+
+        // Update player position based on new canvas size
+        player.x = player.xRatio * canvas.width - player.width / 2;
+        player.y = player.yRatio * canvas.height - player.height;
     }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('load', resizeCanvas);
 
     function drawPlayer() {
         if (!isGameOver) {
-            // Draw player image on the canvas
             ctx.drawImage(player.img, player.x, player.y, player.width, player.height);
         }
     }
@@ -75,13 +76,16 @@
     function movePlayer() {
         player.x += player.dx;
 
-        // Prevent the player from moving out of bounds
         if (player.x < 0) {
             player.x = 0;
         }
         if (player.x + player.width > canvas.width) {
             player.x = canvas.width - player.width;
         }
+
+        // Update player ratios based on the current position
+        player.xRatio = (player.x + player.width / 2) / canvas.width;
+        player.yRatio = (player.y + player.height) / canvas.height;
     }
 
     function createBullet() {
@@ -108,7 +112,6 @@
             bullet.y -= bullet.speed;
             ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
 
-            // Remove bullets that go off screen
             if (bullet.y < 0) {
                 bullets.splice(index, 1);
             }
@@ -117,13 +120,9 @@
 
     function createEnemy() {
         const x = Math.random() * (canvas.width - 30);
-
-        // Choose a random enemy image
         const randomIndex = Math.floor(Math.random() * enemyImages.length);
-        const enemyImageSrc = enemyImages[randomIndex];
-
         const enemyImg = new Image();
-        enemyImg.src = enemyImageSrc;
+        enemyImg.src = enemyImages[randomIndex];
 
         enemies.push({ x: x, y: 0, width: 30, height: 30, speed: 2, img: enemyImg });
     }
@@ -131,10 +130,8 @@
     function drawEnemies() {
         enemies.forEach((enemy, index) => {
             enemy.y += enemy.speed;
-            // Draw enemy with its specific image
             ctx.drawImage(enemy.img, enemy.x, enemy.y, enemy.width, enemy.height);
 
-            // Remove enemies that go off screen
             if (enemy.y > canvas.height) {
                 enemies.splice(index, 1);
             }
@@ -150,7 +147,7 @@
                     bullet.y + bullet.height > enemy.y) {
                     bullets.splice(bulletIndex, 1);
                     enemies.splice(enemyIndex, 1);
-                    score++; // Increase score when an enemy is hit
+                    score++;
                 }
             });
         });
@@ -163,17 +160,13 @@
                 player.y < enemy.y + enemy.height &&
                 player.y + player.height > enemy.y) {
                 
-                // Player and enemy collision detected
-                isGameOver = true; // Set game over state
-                score = 0; // Reset score
+                isGameOver = true;
+                score = 0;
 
-                // Trigger explosion effects with interval
                 triggerExplosions();
 
-                // Clear the enemies array
                 enemies.splice(0, enemies.length);
 
-                // Pause for 2 seconds before restarting the game
                 setTimeout(resetGame, explosionDuration);
             }
         });
@@ -185,24 +178,23 @@
             const explosionY = Math.random() * (canvas.height - 50);
             explosions.push({ x: explosionX, y: explosionY });
 
-            // Stop the explosions after the duration
-            if (explosions.length > 10) { // Adjust this number for how many explosions you want
+            if (explosions.length > 10) {
                 clearInterval(explosionInterval);
-                setTimeout(() => explosions.splice(0, explosions.length), explosionDuration); // Clear explosions after 2 seconds
+                setTimeout(() => explosions.splice(0, explosions.length), explosionDuration);
             }
-        }, 100); // 0.1 seconds interval
+        }, 100);
     }
 
     function drawExplosions() {
         explosions.forEach(explosion => {
-            ctx.drawImage(explosionImg, explosion.x, explosion.y, 50, 50); // Draw explosion images at random positions
+            ctx.drawImage(explosionImg, explosion.x, explosion.y, 50, 50);
         });
     }
 
     function drawScore() {
         ctx.fillStyle = 'white';
         ctx.font = '20px Arial';
-        ctx.fillText('Score: ' + score, canvas.width - 100, canvas.height - 10); // 오른쪽 하단에 점수 표시
+        ctx.fillText('Score: ' + score, canvas.width - 100, canvas.height - 10);
     }
 
     function drawWeaponOptions() {
@@ -210,7 +202,6 @@
         ctx.font = '15px Arial';
         ctx.fillText('New Item:', 10, canvas.height - 60);
 
-        // Draw the current weapon option
         ctx.fillText('Current: ' + weaponOptions[currentWeaponIndex].label, 10, canvas.height - 30);
     }
 
@@ -220,10 +211,10 @@
         drawBullets();
         drawEnemies();
         detectCollisions();
-        detectPlayerCollision(); // Check for collisions with the player
-        drawExplosions(); // Draw explosion effects
-        drawScore(); // Update score display
-        drawWeaponOptions(); // Draw weapon selection options
+        detectPlayerCollision();
+        drawExplosions();
+        drawScore();
+        drawWeaponOptions();
         if (!isGameOver) {
             movePlayer();
         }
@@ -236,6 +227,8 @@
 
     function resetGame() {
         isGameOver = false;
+        player.xRatio = 0.5;
+        player.yRatio = 0.9;
         player.x = canvas.width / 2 - player.width / 2;
         player.y = canvas.height - player.height - 10;
         score = 0;
@@ -249,7 +242,8 @@
         } else if (e.key === ' ') {
             createBullet();
         } else if (e.key.toLowerCase() === 'q') {
-            changeWeapon();
+            currentWeaponIndex = (currentWeaponIndex + 1) % weaponOptions.length;
+            player.weaponType = weaponOptions[currentWeaponIndex].type;
         }
     });
 
@@ -259,7 +253,7 @@
         }
     });
 
-    setInterval(createEnemy, 1000); // Create a new enemy every second
+    setInterval(createEnemy, 1000);
     loop();
 </script>
 </body>
