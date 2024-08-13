@@ -97,12 +97,12 @@ function onCellClick(event) {
         if (currentNumber === 25) {
             clearInterval(timer);
             document.getElementById('time').classList.add('blink');
-            alert(`Congratulations! You completed the game in ${time} seconds!`);
+            alert(`축하합니다. ${time} 초 달성했습니다.!`);
             setTimeout(initializeGame, 3000);
         }
         currentNumber++;
     } else {
-        alert('Game Over! You clicked the wrong number.');
+        alert('앗!! 번호를 잘 못 눌렀어요. 1부터 차례대로 눌러주세요');
         initializeGame();
     }
 }
