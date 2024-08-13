@@ -39,6 +39,7 @@
 
     const bullets = [];
     const enemies = [];
+    const enemyBullets = []; // 적의 총알
     let score = 0;
     let isGameOver = false;
     const explosions = [];
@@ -167,6 +168,30 @@
             if (enemy.y > canvas.height) {
                 enemies.splice(index, 1);
             }
+
+            // 적의 총알 발사
+            if (score >= 10 && Math.random() < 0.01) { // 적이 총알을 발사하는 확률 조정
+                enemyBullets.push({
+                    x: enemy.x + enemy.width / 2,
+                    y: enemy.y + enemy.height,
+                    width: 5,
+                    height: 10,
+                    speed: 3 // 총알 속도 조정
+                });
+            }
+        });
+    }
+
+    function drawEnemyBullets() {
+        ctx.fillStyle = 'yellow';
+        enemyBullets.forEach((bullet, index) => {
+            bullet.y += bullet.speed;
+            ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+
+            // Remove bullets that go off screen
+            if (bullet.y > canvas.height) {
+                enemyBullets.splice(index, 1);
+            }
         });
     }
 
@@ -182,6 +207,25 @@
                     score++;
                 }
             });
+        });
+
+        // Check collision between enemy bullets and player
+        enemyBullets.forEach((bullet, bulletIndex) => {
+            if (bullet.x < player.x + player.width &&
+                bullet.x + bullet.width > player.x &&
+                bullet.y < player.y + player.height &&
+                bullet.y + bullet.height > player.y) {
+                
+                isGameOver = true;
+                score = 0;
+
+                triggerExplosions();
+
+                enemies.splice(0, enemies.length);
+                enemyBullets.splice(0, enemyBullets.length); // Clear all enemy bullets
+
+                setTimeout(resetGame, explosionDuration);
+            }
         });
     }
 
@@ -242,6 +286,7 @@
         drawPlayer();
         drawBullets();
         drawEnemies();
+        drawEnemyBullets(); // 적의 총알 그리기
         detectCollisions();
         detectPlayerCollision();
         drawExplosions();
